@@ -5,7 +5,7 @@ def greedy_tsp(dist_matrix):
     visited = [False] * n
     path = []
     
-    # Start from the first city (0)
+    
     current_city = 0
     path.append(current_city)
     visited[current_city] = True
@@ -29,7 +29,7 @@ def greedy_tsp(dist_matrix):
     
     # Return to the start city
     total_distance += dist_matrix[current_city][path[0]]
-    path.append(path[0])  # Complete the cycle
+    path.append(path[0])  
     
     return path, total_distance
 
@@ -51,8 +51,6 @@ def input_matrix():
         matrix.append(row)
     
     return np.array(matrix)
-import numpy as np
-
 def generate_random_dist_matrix(n):
     
     matrix = np.random.randint(1, 101, size=(n, n))
@@ -64,3 +62,46 @@ def generate_random_dist_matrix(n):
     matrix = (matrix + matrix.T) // 2
     
     return matrix
+
+def matrix_file(filename):
+    coordinates = []
+    with open(filename, 'r') as file:
+        # Skip the first line containing only the count of coordinates
+        next(file)
+        for line in file:
+            _, x, y = map(int, line.strip().split())
+            coordinates.append((x, y))
+
+    # Convert the list of coordinates to a NumPy array
+    coordinates = np.array(coordinates)
+
+    # Step 2: Compute the Distance Matrix using broadcasting
+    diff = coordinates[:, np.newaxis, :] - coordinates[np.newaxis, :, :]
+    distance_matrix = np.sqrt(np.sum(diff ** 2, axis=-1))
+    return distance_matrix
+
+def generate_file(num_cities, filename="tsp_instance.txt", x_range=(0, 2000), y_range=(0, 2000)):
+    """
+    Generates a TSP instance file with the specified number of cities.
+    
+    Parameters:
+    - num_cities (int): The number of cities to generate.
+    - filename (str): The output filename.
+    - x_range (tuple): The range of x-coordinates (min, max).
+    - y_range (tuple): The range of y-coordinates (min, max).
+    """
+    # Generate random coordinates for each city within the specified range
+    x_coords = np.random.randint(x_range[0], x_range[1], num_cities)
+    y_coords = np.random.randint(y_range[0], y_range[1], num_cities)
+
+    # Write the coordinates to a file in the specified format
+    with open(filename, 'w') as f:
+        f.write(f"{num_cities}\n")  # First line is the number of cities
+        for i in range(num_cities):
+            f.write(f"{i + 1} {x_coords[i]} {y_coords[i]}\n")  # Write index, x, y
+
+    print(f"Generated TSP file with {num_cities} cities: {filename}")
+
+# Example usage:
+#generate_file(5, filename="tsp_instance_5.txt")
+
