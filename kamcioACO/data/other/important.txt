@@ -1,0 +1,1 @@
+stagnacja ile musi minac iteracji przy powtarzajacym sie wyniku

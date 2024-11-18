@@ -69,22 +69,34 @@ class ACO:
         return probabilities
 
     def generate_path(self, start):
-        path = [start]
-        visited = set()
-        visited.add(start)
-        prev = start
-        cities = len(self.matrix)
-        for i in range(cities - 1):
-            probabilities = self.get_probabilities(prev, visited)
-            probabilities = [(p[0] ** self.alpha) * (p[1] ** self.beta) for p in probabilities]
-            probabilities = [p / sum(probabilities) for p in probabilities]
+        path = [start]  # Start with the initial city
+        visited = {start}  # Keep track of visited cities
+        prev = start  # Current city
+        cities = len(self.matrix)  # Total number of cities
+
+        while len(visited) < cities:
+            probabilities = []
+            for i in range(cities):
+                if i not in visited:
+                    pheromone = self.matrix[prev][i][1]
+                    visibility = self.matrix[prev][i][0]
+                    probabilities.append((pheromone ** self.alpha) * (visibility ** self.beta))
+                else:
+                    probabilities.append(0)
+
+            total_probability = sum(probabilities)
+            if total_probability == 0:
+                probabilities = [1 if i not in visited else 0 for i in range(cities)]
+                total_probability = sum(probabilities)
+
+            probabilities = [p / total_probability for p in probabilities]
+
+
             next_city = np.random.choice(cities, p=probabilities)
             path.append(next_city)
             visited.add(next_city)
             prev = next_city
-            if len(visited) == cities:
-                visited.clear()
-                visited.add(next_city)
+
         path.append(start)
         return path
 
@@ -106,33 +118,28 @@ class ACO:
         print(f" \n Path length: {self.path_length(path)}")
 
     def spread_pheromones(self, paths):
-        # Obliczenie długości każdej ścieżki
         path_lengths = [(path, self.path_length(path)) for path in paths]
-
         sorted_paths = sorted(path_lengths, key=lambda x: x[1])
-
         median_length = np.median([length for _, length in sorted_paths])
         top_half = [path for path, length in sorted_paths if length < median_length]
         top_two = sorted_paths[:2]
 
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix)):
-                self.matrix[i][j][1] *= (1 - self.pheromone_evaporation)
+        self.pheromone *= (1 - self.pheromone_evaporation)
 
         for path, length in sorted_paths:
             for i in range(len(path) - 1):
-                self.matrix[path[i]][path[i + 1]][1] += 1 / length
-            self.matrix[path[-1]][path[0]][1] += 1 / length
+                self.pheromone[path[i]][path[i + 1]] += 1 / length
+            self.pheromone[path[-1]][path[0]] += 1 / length
 
         for path in top_half:
             for i in range(len(path) - 1):
-                self.matrix[path[i]][path[i + 1]][1] += 1 / self.path_length(path)
-            self.matrix[path[-1]][path[0]][1] += 1 / self.path_length(path)
+                self.pheromone[path[i]][path[i + 1]] += 1 / self.path_length(path)
+            self.pheromone[path[-1]][path[0]] += 1 / self.path_length(path)
 
         for path, length in top_two:
-           for i in range(len(path) - 1):
-               self.matrix[path[i]][path[i + 1]][1] += 1 / length
-           self.matrix[path[-1]][path[0]][1] += 1 / length
+            for i in range(len(path) - 1):
+                self.pheromone[path[i]][path[i + 1]] += 1 / length
+            self.pheromone[path[-1]][path[0]] += 1 / length
 
     def ant_queen(self):
         pass
@@ -169,9 +176,10 @@ class ACO:
             "best_path_length": self.best_path_length
         }
 
+
 def run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta):
     aco = ACO(ant_number=ant_number, iterations=iterations, pheromone_evaporation=pheromone_evaporation, alpha=alpha, beta=beta)
-    aco.init_matrix("data/bier/bier127.txt", pheromones_start=0.1000, visibility_const=400)
+    aco.init_matrix("data/berlin/berlin52.txt", pheromones_start=0.2000, visibility_const=200)
     return aco.run()
 
 def analyze_results(df):
@@ -199,14 +207,14 @@ def analyze_results(df):
 def adjust_parameters(best_params):
     ant_number = best_params['ant_number'] + random.randint(-7, 12)
     iterations = best_params['iterations'] + random.randint(-7, 12)
-    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.02000, 0.02000)
-    alpha = best_params['alpha'] + random.uniform(-0.04000000, 0.0400000)
-    beta = best_params['beta'] + random.uniform(-0.040000000, 0.04000000)
+    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.0040000, 0.0400000)
+    alpha = best_params['alpha'] + random.uniform(-0.000000000, 0.060000000)
+    beta = best_params['beta'] + random.uniform(-0.06000000000, 0.000000000)
 
-    ant_number = max(135, ant_number)
-    iterations = max(20, iterations)
+    ant_number = max(52, ant_number)
+    iterations = max(80, iterations)
     pheromone_evaporation = min(max(0.1, pheromone_evaporation), 0.9)
-    alpha = min(max(0.5, alpha), 3.5)
+    alpha = min(max(0.5, alpha), 4.5)
     beta = min(max(2.0, beta), 5.0)
 
     return ant_number, iterations, pheromone_evaporation, alpha, beta
@@ -222,25 +230,25 @@ def run_multiple():
     results = []
 
     try:
-        df = pd.read_csv('data/bier/bier127.csv',
+        df = pd.read_csv('b52.csv',
                          names=['ant_number', 'iterations', 'pheromone_evaporation', 'alpha', 'beta', 'path', 'result'])
         best_params = analyze_results(df)
     except FileNotFoundError:
         best_params = {
-            'ant_number': 127,
+            'ant_number': 52,
             'iterations': 30,
             'pheromone_evaporation': 0.5,
             'alpha': 1.5,
             'beta': 3.5
         }
 
-    params_list = [adjust_parameters(best_params) for _ in range(15)]
+    params_list = [adjust_parameters(best_params) for _ in range(36)]
 
-    with Pool(processes=5) as pool:
+    with Pool(processes=3) as pool:
         results = pool.map(run_aco_helper, params_list)
 
     df = pd.DataFrame(results)
-    df.to_csv('data/bier/bier127.csv', mode='a', header=False, index=False)
+    df.to_csv('b52.csv', mode='a', header=False, index=False)
 
 if __name__ == '__main__':
     from multiprocessing import freeze_support
