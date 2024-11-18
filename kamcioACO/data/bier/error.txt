@@ -1,0 +1,4 @@
+5,06910223278062% => this is how far from the best result we are currently for bier127 v1
+
+
+4,21641476797896% => this is how far from the best result we are currently for bier127 v2
