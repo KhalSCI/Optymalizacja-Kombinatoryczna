@@ -179,7 +179,7 @@ class ACO:
 
 def run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta):
     aco = ACO(ant_number=ant_number, iterations=iterations, pheromone_evaporation=pheromone_evaporation, alpha=alpha, beta=beta)
-    aco.init_matrix("data/berlin/berlin52.txt", pheromones_start=0.2000, visibility_const=200)
+    aco.init_matrix("data/berlin/berlin52.txt", pheromones_start=0.3000, visibility_const=400)
     return aco.run()
 
 def analyze_results(df):
@@ -206,16 +206,16 @@ def analyze_results(df):
 
 def adjust_parameters(best_params):
     ant_number = best_params['ant_number'] + random.randint(-7, 12)
-    iterations = best_params['iterations'] + random.randint(-7, 12)
-    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.0040000, 0.0400000)
-    alpha = best_params['alpha'] + random.uniform(-0.000000000, 0.060000000)
-    beta = best_params['beta'] + random.uniform(-0.06000000000, 0.000000000)
+    iterations = best_params['iterations'] + random.randint(-7, 25)
+    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.2000000, 0.3000000)
+    alpha = best_params['alpha'] + random.uniform(-0.3000000000, 0.3000000000)
+    beta = best_params['beta'] + random.uniform(-0.30000000000, 0.3000000000)
 
-    ant_number = max(52, ant_number)
-    iterations = max(80, iterations)
+    ant_number = max(60, ant_number)
+    iterations = max(60, iterations)
     pheromone_evaporation = min(max(0.1, pheromone_evaporation), 0.9)
     alpha = min(max(0.5, alpha), 4.5)
-    beta = min(max(2.0, beta), 5.0)
+    beta = min(max(2.0, beta), 7)
 
     return ant_number, iterations, pheromone_evaporation, alpha, beta
 
@@ -236,13 +236,13 @@ def run_multiple():
     except FileNotFoundError:
         best_params = {
             'ant_number': 52,
-            'iterations': 30,
-            'pheromone_evaporation': 0.5,
+            'iterations': 60,
+            'pheromone_evaporation': 0.3,
             'alpha': 1.5,
             'beta': 3.5
         }
 
-    params_list = [adjust_parameters(best_params) for _ in range(36)]
+    params_list = [adjust_parameters(best_params) for _ in range(96)]
 
     with Pool(processes=3) as pool:
         results = pool.map(run_aco_helper, params_list)
