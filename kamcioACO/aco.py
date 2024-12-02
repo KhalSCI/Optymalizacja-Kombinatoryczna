@@ -6,7 +6,7 @@ import pandas as pd
 
 
 class ACO:
-    def __init__(self, ant_number=None, iterations=None, pheromone_evaporation=None, alpha=None, beta=None):
+    def __init__(self, ant_number=None, iterations=None, pheromone_evaporation=None, alpha=None, beta=None, epsilon = None):
         self.matrix = None
         self.cities = None
         self.ant_number = ant_number
@@ -20,6 +20,8 @@ class ACO:
         self.best_path = None
         self.best_path_length = None
         self.best_path_history = None
+        self.epsilon = epsilon
+
 
     def init_matrix(self, file_name, pheromones_start, visibility_const):
         with open(file_name, 'r') as file:
@@ -91,8 +93,13 @@ class ACO:
 
             probabilities = [p / total_probability for p in probabilities]
 
+            # Epsilon jako współczynnik eksploracji i wyjścia z lokalnego optimum
+            if np.random.rand() < self.epsilon:
+                unvisited = [idx for idx in range(cities) if idx not in visited]
+                next_city = np.random.choice(unvisited)
+            else:
+                next_city = np.random.choice(cities, p=probabilities)
 
-            next_city = np.random.choice(cities, p=probabilities)
             path.append(next_city)
             visited.add(next_city)
             prev = next_city
@@ -159,6 +166,7 @@ class ACO:
             self.best_path_history.append(self.best_path_length)
             self.spread_pheromones(paths)
             print(f"Iteration {i + 1}/{self.iterations}")
+            print(f"Best path length: {self.best_path_length}")
 
         print("Best path:")
         self.print_path(self.best_path)
@@ -172,24 +180,26 @@ class ACO:
             "pheromone_evaporation": self.pheromone_evaporation,
             "alpha": self.alpha,
             "beta": self.beta,
+            "epsilon": self.epsilon,
             "best_path": " -> ".join(str(p) for p in self.best_path),
             "best_path_length": self.best_path_length
         }
 
 
-def run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta):
-    aco = ACO(ant_number=ant_number, iterations=iterations, pheromone_evaporation=pheromone_evaporation, alpha=alpha, beta=beta)
-    aco.init_matrix("data/berlin/berlin52.txt", pheromones_start=0.2000, visibility_const=200)
+def run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta, epsilon):
+    aco = ACO(ant_number=ant_number, iterations=iterations, pheromone_evaporation=pheromone_evaporation, alpha=alpha, beta=beta, epsilon=epsilon)
+    aco.init_matrix("data/bier/bier127.txt", pheromones_start=0.2000, visibility_const=200)
     return aco.run()
 
 def analyze_results(df):
     if df.empty:
         return {
             'ant_number': 127,
-            'iterations': 30,
-            'pheromone_evaporation': 0.5,
+            'iterations': 140,
+            'pheromone_evaporation': 0.4,
             'alpha': 1.5,
-            'beta': 3.5
+            'beta': 3.8,
+            'epsilon': 0.05
         }
 
     best_result = df['result'].min()
@@ -200,55 +210,59 @@ def analyze_results(df):
         'iterations': int(best_params['iterations']),
         'pheromone_evaporation': float(best_params['pheromone_evaporation']),
         'alpha': float(best_params['alpha']),
-        'beta': float(best_params['beta'])
+        'beta': float(best_params['beta']),
+        'epsilon': float(best_params['epsilon'])
     }
 
 
 def adjust_parameters(best_params):
-    ant_number = best_params['ant_number'] + random.randint(-7, 12)
-    iterations = best_params['iterations'] + random.randint(-7, 12)
-    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.0040000, 0.0400000)
-    alpha = best_params['alpha'] + random.uniform(-0.000000000, 0.060000000)
-    beta = best_params['beta'] + random.uniform(-0.06000000000, 0.000000000)
+    ant_number = best_params['ant_number'] + random.randint(-7, 7)
+    iterations = best_params['iterations'] + random.randint(-7, 7)
+    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.1700000, 0.17000000)
+    alpha = best_params['alpha'] + random.uniform(-0.1000000000, -0.200000000)
+    beta = best_params['beta'] + random.uniform(0.10000000000, 0.2000000000)
+    epsilon = best_params['epsilon'] + random.uniform(-0.01, 0.01)
 
     ant_number = max(52, ant_number)
-    iterations = max(80, iterations)
+    iterations = max(120, iterations)
     pheromone_evaporation = min(max(0.1, pheromone_evaporation), 0.9)
-    alpha = min(max(0.5, alpha), 4.5)
-    beta = min(max(2.0, beta), 5.0)
+    alpha = min(max(0.3, alpha), 4.5)
+    beta = min(max(2.0, beta), 6.0)
+    epsilon = min(max(0.01, epsilon), 0.3)
 
-    return ant_number, iterations, pheromone_evaporation, alpha, beta
+    return ant_number, iterations, pheromone_evaporation, alpha, beta, epsilon
 
 
 from multiprocessing import Pool
 
 def run_aco_helper(params):
-    ant_number, iterations, pheromone_evaporation, alpha, beta = params
-    return run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta)
+    ant_number, iterations, pheromone_evaporation, alpha, beta, epsilon = params
+    return run_aco(ant_number, iterations, pheromone_evaporation, alpha, beta, epsilon)
 
 def run_multiple():
     results = []
 
     try:
-        df = pd.read_csv('b52.csv',
-                         names=['ant_number', 'iterations', 'pheromone_evaporation', 'alpha', 'beta', 'path', 'result'])
+        df = pd.read_csv('b127.csv',
+                         names=['ant_number', 'iterations', 'pheromone_evaporation', 'alpha', 'beta', 'epsilon', 'path', 'result'])
         best_params = analyze_results(df)
     except FileNotFoundError:
         best_params = {
-            'ant_number': 52,
-            'iterations': 30,
-            'pheromone_evaporation': 0.5,
+            'ant_number': 127,
+            'iterations': 150,
+            'pheromone_evaporation': 0.4,
             'alpha': 1.5,
-            'beta': 3.5
+            'beta': 3.8,
+            'epsilon': 0.05
         }
 
-    params_list = [adjust_parameters(best_params) for _ in range(36)]
+    params_list = [adjust_parameters(best_params) for _ in range(9)]
 
     with Pool(processes=3) as pool:
         results = pool.map(run_aco_helper, params_list)
 
     df = pd.DataFrame(results)
-    df.to_csv('b52.csv', mode='a', header=False, index=False)
+    df.to_csv('b127.csv', mode='a', header=False, index=False)
 
 if __name__ == '__main__':
     from multiprocessing import freeze_support
