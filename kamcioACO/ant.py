@@ -39,7 +39,7 @@ class ACO:
         self.pheromone_two = np.full((num_cities, num_cities), pheromone_two_start)
         self.visibility = np.where(dist_matrix != np.inf, visibility_const / dist_matrix, 0)
 
-        self.cost_matrix = dist_matrix * np.random.uniform(0.8, 1.1, size=dist_matrix.shape)
+        self.cost_matrix = dist_matrix * np.random.uniform(0.9, 2, size=dist_matrix.shape)
         self.matrix = np.stack([self.visibility, self.pheromone_one, self.pheromone_two, dist_matrix, self.cost_matrix], axis=-1)
 
     def generate_path(self, start):

@@ -5,18 +5,18 @@ import random
 
 def run_aco(ant_number, iterations, pheromone_evaporation, alpha_one, alpha_two, beta, epsilon):
     aco = ACO(ant_number=ant_number, iterations=iterations, pheromone_evaporation=pheromone_evaporation, alpha_one=alpha_one, alpha_two=alpha_two, beta=beta, epsilon=epsilon)
-    aco.init_matrix("data/berlin/berlin52.txt", pheromone_one_start=0.2000, pheromone_two_start=0.200, visibility_const=200)
+    aco.init_matrix("data/berlin/berlin52.txt", pheromone_one_start=0.30000, pheromone_two_start=0.5000, visibility_const=200)
     return aco.run()
 
 def analyze_results(df):
     if df.empty:
         return {
-            'ant_number': 127,
-            'iterations': 90,
+            'ant_number': 65,
+            'iterations': 100,
             'pheromone_evaporation': 0.4,
             'alpha_one': 1.5,
-            'alpha_two': 3.8,
-            'beta': 3.8,
+            'alpha_two': 2.5,
+            'beta': 3.5,
             'epsilon': 0.05
         }
 
@@ -35,16 +35,16 @@ def analyze_results(df):
 
 
 def adjust_parameters(best_params):
-    ant_number = best_params['ant_number'] + random.randint(-7, 7)
-    iterations = best_params['iterations'] + random.randint(0, 0)
-    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.3000000, 0.3000000)
-    alpha_one = best_params['alpha_one'] + random.uniform(-0.5000000000, 0.300000000)
-    alpha_two = best_params['alpha_two'] + random.uniform(-0.50000000000, 0.5000000000)
-    beta = best_params['beta'] + random.uniform(-0.30000000000, 0.9000000000)
+    ant_number = best_params['ant_number'] + random.randint(-3, 7)
+    iterations = best_params['iterations'] + random.randint(-3, 7)
+    pheromone_evaporation = best_params['pheromone_evaporation'] + random.uniform(-0.06000000, 0.06000000)
+    alpha_one = best_params['alpha_one'] + random.uniform(-0.0001000000, 0.05000000000)
+    alpha_two = best_params['alpha_two'] + random.uniform(-0.000010000000, 0.03000000000)
+    beta = best_params['beta'] + random.uniform(-0.020000000000, 0.0000100000)
     epsilon = best_params['epsilon'] + random.uniform(-0.01, 0.01)
 
     ant_number = max(52, ant_number)
-    iterations = min(70, iterations)
+    iterations = max(40, iterations)
     pheromone_evaporation = min(max(0.1, pheromone_evaporation), 0.9)
     alpha_one = min(max(0.3, alpha_one), 4.5)
     alpha_two = min(max(0.3, alpha_two), 4.5)
@@ -69,16 +69,16 @@ def run_multiple():
         best_params = analyze_results(df)
     except FileNotFoundError:
         best_params = {
-            'ant_number': 127,
-            'iterations': 90,
+            'ant_number': 65,
+            'iterations': 100,
             'pheromone_evaporation': 0.4,
             'alpha_one': 1.5,
-            'alpha_two': 3.8,
-            'beta': 3.8,
+            'alpha_two': 2.5,
+            'beta': 3.5,
             'epsilon': 0.05
         }
 
-    params_list = [adjust_parameters(best_params) for _ in range(160)]
+    params_list = [adjust_parameters(best_params) for _ in range(30)]
 
     with Pool(processes=3) as pool:
         results = pool.map(run_aco_helper, params_list)
