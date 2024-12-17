@@ -1,28 +1,24 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 class ACO:
-    def __init__(self, ant_number=None, iterations=None, pheromone_evaporation=None, alpha_one=None, alpha_two=None, beta=None, epsilon=None):
+    def __init__(self, ant_number=None, iterations=None, pheromone_evaporation=None, alpha=None, beta=None, epsilon=None):
         self.ant_number = ant_number
         self.iterations = iterations
         self.pheromone_evaporation = pheromone_evaporation
-        self.alpha_one = alpha_one
-        self.alpha_two = alpha_two
+        self.alpha = alpha
         self.beta = beta
         self.epsilon = epsilon
-
         self.matrix = None
         self.visibility = None
-        self.pheromone_one = None
-        self.pheromone_two = None
-        self.cost_matrix = None
-
+        self.pheromone = None
         self.best_path = None
         self.best_path_length = float('inf')
         self.best_path_history = []
 
-    def init_matrix(self, file_name, pheromone_one_start, pheromone_two_start, visibility_const):
-        with open(file_name, 'r') as file:
+    def init_matrix(self, coordinates_file, pheromone_start, visibility_const):
+        with open(coordinates_file, 'r') as file:
             lines = file.readlines()
             num_cities = int(lines[0])
             coordinates = []
@@ -33,92 +29,150 @@ class ACO:
         dist_matrix = np.linalg.norm(
             np.array(coordinates)[:, None, :] - np.array(coordinates)[None, :, :], axis=-1
         )
-        np.fill_diagonal(dist_matrix, np.inf)  # Nie można podróżować do siebie samego
-
-        self.pheromone_one = np.full((num_cities, num_cities), pheromone_one_start)
-        self.pheromone_two = np.full((num_cities, num_cities), pheromone_two_start)
+        np.fill_diagonal(dist_matrix, np.inf)
+        self.pheromone = np.full((num_cities, num_cities), pheromone_start)
         self.visibility = np.where(dist_matrix != np.inf, visibility_const / dist_matrix, 0)
-
-        self.cost_matrix = dist_matrix * np.random.uniform(0.9, 2, size=dist_matrix.shape)
-        self.matrix = np.stack([self.visibility, self.pheromone_one, self.pheromone_two, dist_matrix, self.cost_matrix], axis=-1)
+        self.visibility /= self.visibility.sum(axis=1, keepdims=True)
+        self.matrix = np.stack([self.visibility, self.pheromone, dist_matrix], axis=-1)
 
     def generate_path(self, start):
         num_cities = len(self.matrix)
         path = [start]
         visited = np.zeros(num_cities, dtype=bool)
         visited[start] = True
-
         current_city = start
 
         for _ in range(num_cities - 1):
-            pheromone_alpha = self.pheromone_one[current_city] ** self.alpha_one
-            pheromone_beta = self.pheromone_two[current_city] ** self.alpha_two
-            visibility_beta = self.visibility[current_city] ** self.beta
-
-            probabilities = pheromone_alpha * pheromone_beta * visibility_beta
-            probabilities[visited] = 0  # Wyklucz odwiedzone miasta
-
-            if probabilities.sum() == 0:  # Obsługa przypadku, gdy brak prawdopodobieństwa
+            if random.random() < self.epsilon:
                 next_city = np.random.choice(np.where(~visited)[0])
             else:
-                probabilities /= probabilities.sum()
-                next_city = np.random.choice(num_cities, p=probabilities)
+                pheromone_alpha = self.pheromone[current_city] ** self.alpha
+                visibility_beta = self.visibility[current_city] ** self.beta
+
+                probabilities = pheromone_alpha * visibility_beta
+                probabilities[visited] = 0
+
+                if probabilities.sum() == 0:
+                    next_city = np.random.choice(np.where(~visited)[0])
+                else:
+                    probabilities /= probabilities.sum()
+                    next_city = np.random.choice(num_cities, p=probabilities)
 
             path.append(next_city)
             visited[next_city] = True
             current_city = next_city
 
-        path.append(start)  # Wracamy do miasta startowego
+        path.append(start)
         return path
 
-    def path_metrics(self, path):
+    def path_length(self, path):
         indices = np.array(path)
-        lengths = self.matrix[indices[:-1], indices[1:], 3]
-        costs = self.matrix[indices[:-1], indices[1:], 4]
-        return lengths.sum(), costs.sum()
+        lengths = self.matrix[indices[:-1], indices[1:], 2]
+        return lengths.sum()
 
     def spread_pheromones(self, paths):
-        path_lengths = [self.path_metrics(path)[0] for path in paths]
-        path_costs = [self.path_metrics(path)[1] for path in paths]
+        path_lengths = [self.path_length(path) for path in paths]
 
-        self.pheromone_one *= (1 - self.pheromone_evaporation)
-        self.pheromone_two *= (1 - self.pheromone_evaporation)
+        self.pheromone *= (1 - self.pheromone_evaporation)
 
-        for path, length, cost in zip(paths, path_lengths, path_costs):
+        for path, length in zip(paths, path_lengths):
             for i, j in zip(path[:-1], path[1:]):
-                self.pheromone_one[i][j] += 1 / length
-                self.pheromone_two[i][j] += 1 / cost
+                self.pheromone[i][j] += 1 / length
+
+        for i, j in zip(self.best_path[:-1], self.best_path[1:]):
+            self.pheromone[i][j] += 10 / self.best_path_length
+
+    def apply_local_pheromone_update(self, path):
+        decay_factor = 0.05
+        for i, j in zip(path[:-1], path[1:]):
+            self.pheromone[i][j] *= (1 - decay_factor)
+            self.pheromone[i][j] += decay_factor / self.best_path_length
+
+    def greedy_initial_solution(self, start):
+        num_cities = len(self.matrix)
+        path = [start]
+        visited = np.zeros(num_cities, dtype=bool)
+        visited[start] = True
+        current_city = start
+
+        for _ in range(num_cities - 1):
+            remaining = np.where(~visited)[0]
+            next_city = remaining[np.argmin(self.matrix[current_city, remaining, 2])]
+            path.append(next_city)
+            visited[next_city] = True
+            current_city = next_city
+
+        path.append(start)
+        return path
+
+    def two_opt(self, path):
+        best_path = path
+        best_length = self.path_length(path)
+
+        for i in range(1, len(path) - 2):
+            for j in range(i + 1, len(path) - 1):
+                new_path = path[:i] + path[i:j + 1][::-1] + path[j + 1:]
+                new_length = self.path_length(new_path)
+                if new_length < best_length:
+                    best_path, best_length = new_path, new_length
+        return best_path
 
     def run(self):
+        fixed_start = 0
+        initial_path = self.greedy_initial_solution(fixed_start)
+        self.best_path = initial_path
+        self.best_path_length = self.path_length(initial_path)
+
         for iteration in range(self.iterations):
-            paths = [self.generate_path(random.randint(0, len(self.matrix) - 1)) for _ in range(self.ant_number)]
+            # Dynamic epsilon reduction
+            self.epsilon = max(0.01, self.epsilon * 0.95)
+
+            paths = [self.generate_path(fixed_start) for _ in range(self.ant_number)]
+
             for path in paths:
-                path_length, _ = self.path_metrics(path)
+                self.apply_local_pheromone_update(path)
+                path_length = self.path_length(path)
                 if path_length < self.best_path_length:
                     self.best_path = path
                     self.best_path_length = path_length
+
             self.spread_pheromones(paths)
             self.best_path_history.append(self.best_path_length)
 
+            # Dynamic pheromone evaporation reduction
+            self.pheromone_evaporation = max(0.1, self.pheromone_evaporation * 0.99)
+
             print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
+
+        # Apply 2-opt for final optimization
+        self.best_path = self.two_opt(self.best_path)
+        self.best_path_length = self.path_length(self.best_path)
 
         print("Best Path:", " -> ".join(map(str, self.best_path)))
         print("Best Path History:", self.best_path_history)
 
+        plt.plot(self.best_path_history)
+        plt.xlabel('Iteration')
+        plt.ylabel('Best Path Length')
+        plt.title('ACO Optimization Progress')
+        plt.show()
 
         return {
             "ant_number": self.ant_number,
             "iterations": self.iterations,
             "pheromone_evaporation": self.pheromone_evaporation,
-            "alpha_one": self.alpha_one,
-            "alpha_two": self.alpha_two,
+            "alpha": self.alpha,
             "beta": self.beta,
             "epsilon": self.epsilon,
             "best_path": " -> ".join(str(p) for p in self.best_path),
             "best_path_length": self.best_path_length
         }
 
-#
-# test = ACO(ant_number=65, iterations=101, pheromone_evaporation=0.3974180, alpha_one=2.7731535401984324, alpha_two=2.5, beta=4.066823531422358, epsilon=0.1)
-# test.init_matrix('./data/berlin/berlin52.txt', pheromone_one_start=0.200, pheromone_two_start=0.200, visibility_const=200)
-# test.run()
+import timeit
+def run_time():
+    test = ACO(ant_number=90, iterations=40, pheromone_evaporation=0.9, alpha=3, beta=3, epsilon=0.05)
+    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.005, visibility_const=200)
+    return test.run()
+
+execution_time = timeit.timeit(run_time, number=1)
+print(f"Execution time: {execution_time} seconds")
