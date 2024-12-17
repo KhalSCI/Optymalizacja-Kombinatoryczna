@@ -106,16 +106,40 @@ class ACO:
         return path
 
     def two_opt(self, path):
-        best_path = path
-        best_length = self.path_length(path)
+        best_path = np.array(path)
+        best_length = self.path_length(best_path)
 
         for i in range(1, len(path) - 2):
             for j in range(i + 1, len(path) - 1):
-                new_path = path[:i] + path[i:j + 1][::-1] + path[j + 1:]
+                new_path = np.concatenate((best_path[:i], best_path[i:j + 1][::-1], best_path[j + 1:]))
                 new_length = self.path_length(new_path)
                 if new_length < best_length:
-                    best_path, best_length = new_path, new_length
-        return best_path
+                    best_path = new_path
+                    best_length = new_length
+        return best_path.tolist()
+
+    def three_opt(self, path):
+        best_path = np.array(path)
+        best_length = self.path_length(best_path)
+
+        n = len(path) - 1
+        for i in range(1, n - 2):
+            for j in range(i + 1, n - 1):
+                for k in range(j + 1, n):
+                    # Create all possible 3-opt moves
+                    new_paths = [
+                        np.concatenate((best_path[:i], best_path[i:j][::-1], best_path[j:k][::-1], best_path[k:])),
+                        np.concatenate((best_path[:i], best_path[j:k], best_path[i:j], best_path[k:])),
+                        np.concatenate((best_path[:i], best_path[j:k][::-1], best_path[i:j][::-1], best_path[k:])),
+                    ]
+                    # Find the best one
+                    for new_path in new_paths:
+                        new_length = self.path_length(new_path)
+                        if new_length < best_length:
+                            best_path = new_path
+                            best_length = new_length
+        return best_path.tolist()
+
 
     def run(self):
         fixed_start = 0
@@ -141,13 +165,11 @@ class ACO:
 
             self.spread_pheromones(paths)
             self.best_path_history.append(self.best_path_length)
-
             self.pheromone_evaporation = max(0.1, self.pheromone_evaporation * 0.99)
-
-            print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
-
             self.best_path = self.two_opt(self.best_path)
             self.best_path_length = self.path_length(self.best_path)
+            print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
+
 
         print("Best Path:", " -> ".join(map(str, self.best_path)))
         print("Best Path History:", self.best_path_history)
@@ -170,8 +192,8 @@ class ACO:
 
 import timeit
 def run_time():
-    test = ACO(ant_number=200, iterations=10, pheromone_evaporation=0.93, alpha=2.1, beta=5.8, epsilon=0.05)
-    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.001, visibility_const=200)
+    test = ACO(ant_number=80, iterations=30, pheromone_evaporation=0.9, alpha=1.8, beta=5.2, epsilon=0.04)
+    test.init_matrix('data/other/tsp250.txt',  pheromone_start=0.001, visibility_const=200)
     return test.run()
 
 execution_time = timeit.timeit(run_time, number=1)
