@@ -123,11 +123,14 @@ class ACO:
         self.best_path = initial_path
         self.best_path_length = self.path_length(initial_path)
 
+        num_cities = len(self.matrix)
+        starting_cities = list(range(num_cities))
+        random.shuffle(starting_cities)
+
         for iteration in range(self.iterations):
-            # Dynamic epsilon reduction
             self.epsilon = max(0.01, self.epsilon * 0.95)
 
-            paths = [self.generate_path(fixed_start) for _ in range(self.ant_number)]
+            paths = [self.generate_path(starting_cities[i % num_cities]) for i in range(self.ant_number)]
 
             for path in paths:
                 self.apply_local_pheromone_update(path)
@@ -139,23 +142,20 @@ class ACO:
             self.spread_pheromones(paths)
             self.best_path_history.append(self.best_path_length)
 
-            # Dynamic pheromone evaporation reduction
             self.pheromone_evaporation = max(0.1, self.pheromone_evaporation * 0.99)
 
             print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
 
-        # Apply 2-opt for final optimization
-        self.best_path = self.two_opt(self.best_path)
-        self.best_path_length = self.path_length(self.best_path)
+            self.best_path = self.two_opt(self.best_path)
+            self.best_path_length = self.path_length(self.best_path)
 
         print("Best Path:", " -> ".join(map(str, self.best_path)))
         print("Best Path History:", self.best_path_history)
-
-        plt.plot(self.best_path_history)
-        plt.xlabel('Iteration')
-        plt.ylabel('Best Path Length')
-        plt.title('ACO Optimization Progress')
-        plt.show()
+        # plt.plot(self.best_path_history)
+        # plt.xlabel('Iteration')
+        # plt.ylabel('Best Path Length')
+        # plt.title('ACO Optimization Progress')
+        # plt.show()
 
         return {
             "ant_number": self.ant_number,
@@ -170,8 +170,8 @@ class ACO:
 
 import timeit
 def run_time():
-    test = ACO(ant_number=90, iterations=40, pheromone_evaporation=0.9, alpha=3, beta=3, epsilon=0.05)
-    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.005, visibility_const=200)
+    test = ACO(ant_number=200, iterations=10, pheromone_evaporation=0.93, alpha=2.1, beta=5.8, epsilon=0.05)
+    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.001, visibility_const=200)
     return test.run()
 
 execution_time = timeit.timeit(run_time, number=1)
