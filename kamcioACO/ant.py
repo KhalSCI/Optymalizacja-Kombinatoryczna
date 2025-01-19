@@ -1,5 +1,10 @@
 import numpy as np
 import random
+import timeit
+import time
+from itertools import product
+from multiprocessing import Pool
+from functools import partial
 import matplotlib.pyplot as plt
 
 class ACO:
@@ -143,15 +148,21 @@ class ACO:
 
     def run(self):
         fixed_start = 0
-        # initial_path = self.greedy_initial_solution(fixed_start)
+        initial_path = self.greedy_initial_solution(fixed_start)
+        initial_path_length = self.path_length(initial_path)
         # self.best_path = initial_path
         # self.best_path_length = self.path_length(initial_path)
 
         num_cities = len(self.matrix)
         starting_cities = list(range(num_cities))
         random.shuffle(starting_cities)
+        start_time = time.time()
+        time_limit = 170
 
         for iteration in range(self.iterations):
+            if time.time() - start_time > time_limit:
+                print(f"Stopped after {iteration} iterations due to time limit")
+                break
             self.epsilon = max(0.01, self.epsilon * 0.95)
 
             paths = [self.generate_path(starting_cities[i % num_cities]) for i in range(self.ant_number)]
@@ -170,7 +181,7 @@ class ACO:
             self.best_path_length = self.path_length(self.best_path)
             print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
 
-
+        print(f"Initial Path Length: {initial_path_length}")
         # print("Best Path:", " -> ".join(map(str, self.best_path)))
         # print("Best Path History:", self.best_path_history)
         # plt.plot(self.best_path_history)
@@ -190,11 +201,49 @@ class ACO:
             "best_path_length": self.best_path_length
         }
 
-import timeit
 def run_time():
-    test = ACO(ant_number=150, iterations=100, pheromone_evaporation=0.9, alpha=1.4, beta=5, epsilon=0.04)
-    test.init_matrix('data/other/tsp250.txt',  pheromone_start=0.001, visibility_const=200)
+    test = ACO(ant_number=200, iterations=30, pheromone_evaporation=0.7, alpha=1, beta=6, epsilon=0.1)
+    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.001, visibility_const=200)
     return test.run()
 
 execution_time = timeit.timeit(run_time, number=1)
 print(f"Execution time: {execution_time} seconds")
+
+def evaluate(params, coordinates_file, pheromone_start, visibility_const, seed=42):
+    num_ants, num_iterations, alpha, beta, evaporation_rate, epsilon = params
+    aco = ACO(ant_number=num_ants, iterations=num_iterations, pheromone_evaporation=evaporation_rate, alpha=alpha, beta=beta, epsilon=epsilon)
+    aco.init_matrix(coordinates_file, pheromone_start, visibility_const)
+    result = aco.run()
+    return (params, result['best_path_length'])
+
+def grid_search_aco(coordinates_file, pheromone_start, visibility_const, num_ants_range=None, num_iterations_range=None, alpha_range=None, beta_range=None, evaporation_rate_range=None, epsilon_range=None, seed=42):
+    if num_ants_range is None:
+        num_ants_range = [100, 150, 200]
+    if num_iterations_range is None:
+        num_iterations_range = [50, 100, 200]
+    if alpha_range is None:
+        alpha_range = [1.1, 1.2, 1.3]
+    if beta_range is None:
+        beta_range = [5.0, 5.2, 5.4, 5.6]
+    if evaporation_rate_range is None:
+        evaporation_rate_range = [0.8, 0.9]
+    if epsilon_range is None:
+        epsilon_range = [0.04]
+
+    best_params = None
+    best_distance = float('inf')
+
+    param_combinations = list(product(num_ants_range, num_iterations_range, alpha_range, beta_range, evaporation_rate_range, epsilon_range))
+
+    with Pool(processes=4) as pool:
+        results = pool.map(partial(evaluate, coordinates_file=coordinates_file, pheromone_start=pheromone_start, visibility_const=visibility_const, seed=seed), param_combinations)
+
+    for params, distance in results:
+        if distance < best_distance:
+            best_distance = distance
+            best_params = params
+
+    return best_params, best_distance
+
+# best_params, best_distance = grid_search_aco('data/benchmark_instances_transformed/transformed_rat99.tsp', pheromone_start=0.001, visibility_const=200)
+# print(best_params, best_distance)

@@ -1,0 +1,157 @@
+ants, iterations, alpha, beta, evaporation, epsilon, result
+
+    rat_99 -> (100, 50, 1.1, 5.6, 0.8, 0.04) 1224.5148660933496
+    Initial Path Length: 1564.7248553632787
+
+    test = ACO(ant_number=200, iterations=100, pheromone_evaporation=0.9, alpha=1.4, beta=5, epsilon=0.04)
+    test.init_matrix('data/benchmark_instances_transformed/transformed_st70.tsp',  pheromone_start=0.001, visibility_const=200)
+    Initial Path Length: 805.5312008437772
+    Iteration 100/100, Best Path Length: 692.1457707643019
+
+
+    test = ACO(ant_number=144, iterations=50, pheromone_evaporation=0.9, alpha=1.2, beta=5.2, epsilon=0.04)
+    test.init_matrix('data/benchmark_instances_transformed/transformed_pr144.tsp',  pheromone_start=0.001, visibility_const=200)
+    Iteration 50/50, Best Path Length: 58669.427294611814
+    Initial Path Length: 61650.71979547379
+
+
+    test = ACO(ant_number=300, iterations=50, pheromone_evaporation=0.9, alpha=1, beta=5.7, epsilon=0.04)
+    test.init_matrix('data/benchmark_instances_transformed/transformed_pr136.tsp',  pheromone_start=0.001, visibility_const=200)
+    Iteration 50/50, Best Path Length: 100285.20051300336
+    Initial Path Length: 120777.85961075764
+
+
+    d657
+    Iteration 13/50, Best Path Length: 53564.75699667877
+    Initial Path Length: 62049.85782740357
+
+
+    u574
+    Iteration 50/50, Best Path Length: 41391.47844414066
+    Initial Path Length: 51068.0449514467
+
+    d493
+    Iteration 50/50, Best Path Length: 38151.96780218629
+    Initial Path Length: 42289.651748277814
+
+    ch150
+    Iteration 50/50, Best Path Length: 6826.020319349447
+    Initial Path Length: 8201.55766960928
+
+    ts225
+    Iteration 50/50, Best Path Length: 130204.61407392038
+    Initial Path Length: 152493.55078894642
+
+    d1291
+    Iteration 24/50, Best Path Length: 58079.21064535208
+    Stopped after 24 iterations due to time limit
+    Initial Path Length: 60356.45939359181
+
+    --------------------------------------------------------------------------------
+
+    LOSOWE
+
+    B_100
+    Iteration 50/50, Best Path Length: 16154.080989608827
+    Initial Path Length: 21277.393950729238
+
+    B_200
+    Iteration 50/50, Best Path Length: 22516.385295824657
+    Initial Path Length: 26966.783665544695
+
+    B_300
+    Iteration 50/50, Best Path Length: 28311.18603333518
+    Initial Path Length: 30373.2138278969
+
+    B_400
+    Iteration 50/50, Best Path Length: 33370.910844610495
+    Initial Path Length: 35755.57483233101
+
+    B_500
+    Iteration 17/30, Best Path Length: 35397.3989337967
+    Initial Path Length: 40375.146177511895
+
+    B_600
+    Iteration 30/30, Best Path Length: 40334.19699202804
+    Initial Path Length: 45652.16840123765
+
+    B_700
+    Iteration 30/30, Best Path Length: 43681.469915680245
+    Initial Path Length: 48052.60187719964
+
+    B_800
+    Iteration 30/30, Best Path Length: 45565.14662680377
+    Initial Path Length: 51021.560556444674
+
+    B_900
+    Iteration 30/30, Best Path Length: 48161.20921518901
+    Initial Path Length: 56928.0388926119
+
+    B_1000
+    Iteration 30/30, Best Path Length: 50204.455503511854
+    Initial Path Length: 57000.68926339377
+
+    F_55
+    Iteration 30/30, Best Path Length: 33808.761196594714
+    Initial Path Length: 46925.8626413628
+
+    F_89
+    Iteration 30/30, Best Path Length: 65709.8197234048
+    Initial Path Length: 77462.73073381155
+
+    F_144
+    Iteration 23/30, Best Path Length: 141278.8371439831
+    Initial Path Length: 174218.66303711882
+
+    F_233
+    Iteration 30/30, Best Path Length: 299776.67598239006
+    Initial Path Length: 347504.53015444253
+
+    F_377
+    Iteration 30/30, Best Path Length: 59512.2615616548
+    Initial Path Length: 66801.0846155313
+
+    F_610
+    Iteration 30/30, Best Path Length: 120785.82184582794
+    Initial Path Length: 137624.24868202876
+
+    F_987
+    Iteration 30/30, Best Path Length: 24836.298016086308
+    Initial Path Length: 28510.99922451591
+
+--------------------------------------------------------------------------------\
+
+        RANKINGOWE
+
+    berlin52
+    test = ACO(ant_number=100, iterations=30, pheromone_evaporation=0.8, alpha=1, beta=5.5, epsilon=0.04)
+    test.init_matrix('data/berlin/berlin52.txt',  pheromone_start=0.001, visibility_const=200)
+    Iteration 30/30, Best Path Length: 7544.36590190409
+    Initial Path Length: 8980.91827932919
+
+    bier127
+    test = ACO(ant_number=100, iterations=30, pheromone_evaporation=0.8, alpha=1, beta=5.5, epsilon=0.04)
+    test.init_matrix('data/berlin/berlin52.txt',  pheromone_start=0.001, visibility_const=200)
+    Iteration 30/30, Best Path Length: 118671.68774921929
+    Initial Path Length: 135751.77804825202
+
+    tsp250
+    test = ACO(ant_number=200, iterations=30, pheromone_evaporation=0.9, alpha=1.2, beta=5.5, epsilon=0.04)
+    test.init_matrix('data/tsp250.txt',  pheromone_start=0.001, visibility_const=200)
+    Iteration 30/30, Best Path Length: 12995.770295886648
+    Initial Path Length: 16313.695639677742
+
+    tsp500
+    test = ACO(ant_number=200, iterations=30, pheromone_evaporation=0.7, alpha=1, beta=6, epsilon=0.1)
+    test.init_matrix('data/tsp500.txt',  pheromone_start=0.001, visibility_const=200)
+    Iteration 30/30, Best Path Length: 91083.00547489885
+    Initial Path Length: 97874.46978165556
+
+    tsp1000
+    test = ACO(ant_number=200, iterations=30, pheromone_evaporation=0.7, alpha=1, beta=6, epsilon=0.1)
+    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.001, visibility_const=200)
+    Iteration 22/30, Best Path Length: 25540.7706298204
+    Initial Path Length: 29197.716315887614
+
+
+
