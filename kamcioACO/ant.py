@@ -143,9 +143,9 @@ class ACO:
 
     def run(self):
         fixed_start = 0
-        initial_path = self.greedy_initial_solution(fixed_start)
-        self.best_path = initial_path
-        self.best_path_length = self.path_length(initial_path)
+        # initial_path = self.greedy_initial_solution(fixed_start)
+        # self.best_path = initial_path
+        # self.best_path_length = self.path_length(initial_path)
 
         num_cities = len(self.matrix)
         starting_cities = list(range(num_cities))
@@ -157,7 +157,7 @@ class ACO:
             paths = [self.generate_path(starting_cities[i % num_cities]) for i in range(self.ant_number)]
 
             for path in paths:
-                self.apply_local_pheromone_update(path)
+                # self.apply_local_pheromone_update(path)
                 path_length = self.path_length(path)
                 if path_length < self.best_path_length:
                     self.best_path = path
@@ -171,8 +171,8 @@ class ACO:
             print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
 
 
-        print("Best Path:", " -> ".join(map(str, self.best_path)))
-        print("Best Path History:", self.best_path_history)
+        # print("Best Path:", " -> ".join(map(str, self.best_path)))
+        # print("Best Path History:", self.best_path_history)
         # plt.plot(self.best_path_history)
         # plt.xlabel('Iteration')
         # plt.ylabel('Best Path Length')
@@ -192,7 +192,7 @@ class ACO:
 
 import timeit
 def run_time():
-    test = ACO(ant_number=80, iterations=30, pheromone_evaporation=0.9, alpha=1.8, beta=5.2, epsilon=0.04)
+    test = ACO(ant_number=150, iterations=100, pheromone_evaporation=0.9, alpha=1.4, beta=5, epsilon=0.04)
     test.init_matrix('data/other/tsp250.txt',  pheromone_start=0.001, visibility_const=200)
     return test.run()
 

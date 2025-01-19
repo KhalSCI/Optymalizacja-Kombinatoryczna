@@ -1,7 +1,6 @@
 from ant import ACO
 import pandas as pd
 import random
-import pandas as pd
 from multiprocessing import Pool
 
 
