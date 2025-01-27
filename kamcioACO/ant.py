@@ -147,9 +147,9 @@ class ACO:
 
 
     def run(self):
-        fixed_start = 0
-        initial_path = self.greedy_initial_solution(fixed_start)
-        initial_path_length = self.path_length(initial_path)
+        # fixed_start = 0
+        # initial_path = self.greedy_initial_solution(fixed_start)
+        # initial_path_length = self.path_length(initial_path)
         # self.best_path = initial_path
         # self.best_path_length = self.path_length(initial_path)
 
@@ -180,9 +180,10 @@ class ACO:
             self.best_path = self.two_opt(self.best_path)
             self.best_path_length = self.path_length(self.best_path)
             print(f"Iteration {iteration + 1}/{self.iterations}, Best Path Length: {self.best_path_length}")
+            # print("Best Path:", ",".join(map(str, self.best_path)))
 
-        print(f"Initial Path Length: {initial_path_length}")
-        # print("Best Path:", " -> ".join(map(str, self.best_path)))
+        # print(f"Initial Path Length: {initial_path_length}")
+        # print("Best Path:", ",".join(map(str, self.best_path)))
         # print("Best Path History:", self.best_path_history)
         # plt.plot(self.best_path_history)
         # plt.xlabel('Iteration')
@@ -201,13 +202,13 @@ class ACO:
             "best_path_length": self.best_path_length
         }
 
-def run_time():
-    test = ACO(ant_number=200, iterations=30, pheromone_evaporation=0.7, alpha=1, beta=6, epsilon=0.1)
-    test.init_matrix('data/other/tsp1000.txt',  pheromone_start=0.001, visibility_const=200)
-    return test.run()
-
-execution_time = timeit.timeit(run_time, number=1)
-print(f"Execution time: {execution_time} seconds")
+# def run_time():
+#     test = ACO(ant_number=200, iterations=40, pheromone_evaporation=0.2, alpha=1, beta=5.7, epsilon=0.04)
+#     test.init_matrix('data/benchmark_instances_transformed/transformed_st70.tsp',  pheromone_start=0.001, visibility_const=200)
+#     return test.run()
+#
+# execution_time = timeit.timeit(run_time, number=1)
+# print(f"Execution time: {execution_time} seconds")
 
 def evaluate(params, coordinates_file, pheromone_start, visibility_const, seed=42):
     num_ants, num_iterations, alpha, beta, evaporation_rate, epsilon = params
@@ -218,15 +219,15 @@ def evaluate(params, coordinates_file, pheromone_start, visibility_const, seed=4
 
 def grid_search_aco(coordinates_file, pheromone_start, visibility_const, num_ants_range=None, num_iterations_range=None, alpha_range=None, beta_range=None, evaporation_rate_range=None, epsilon_range=None, seed=42):
     if num_ants_range is None:
-        num_ants_range = [100, 150, 200]
+        num_ants_range = [100]
     if num_iterations_range is None:
-        num_iterations_range = [50, 100, 200]
+        num_iterations_range = [30]
     if alpha_range is None:
-        alpha_range = [1.1, 1.2, 1.3]
+        alpha_range = [1,2,3,4,5]
     if beta_range is None:
-        beta_range = [5.0, 5.2, 5.4, 5.6]
+        beta_range = [1,2,3,4,5]
     if evaporation_rate_range is None:
-        evaporation_rate_range = [0.8, 0.9]
+        evaporation_rate_range = [0.1,0.2,0.3,0.4,0.5]
     if epsilon_range is None:
         epsilon_range = [0.04]
 
@@ -235,7 +236,7 @@ def grid_search_aco(coordinates_file, pheromone_start, visibility_const, num_ant
 
     param_combinations = list(product(num_ants_range, num_iterations_range, alpha_range, beta_range, evaporation_rate_range, epsilon_range))
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=7) as pool:
         results = pool.map(partial(evaluate, coordinates_file=coordinates_file, pheromone_start=pheromone_start, visibility_const=visibility_const, seed=seed), param_combinations)
 
     for params, distance in results:
@@ -245,5 +246,5 @@ def grid_search_aco(coordinates_file, pheromone_start, visibility_const, num_ant
 
     return best_params, best_distance
 
-# best_params, best_distance = grid_search_aco('data/benchmark_instances_transformed/transformed_rat99.tsp', pheromone_start=0.001, visibility_const=200)
-# print(best_params, best_distance)
+best_params, best_distance = grid_search_aco('data/tsp500.txt', pheromone_start=0.001, visibility_const=200)
+print(best_params, best_distance)

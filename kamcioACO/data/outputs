@@ -6,7 +6,7 @@ ants, iterations, alpha, beta, evaporation, epsilon, result
     test = ACO(ant_number=200, iterations=100, pheromone_evaporation=0.9, alpha=1.4, beta=5, epsilon=0.04)
     test.init_matrix('data/benchmark_instances_transformed/transformed_st70.tsp',  pheromone_start=0.001, visibility_const=200)
     Initial Path Length: 805.5312008437772
-    Iteration 100/100, Best Path Length: 692.1457707643019
+    Iteration 100/100, Best Path Length: 681.1457707643019
 
 
     test = ACO(ant_number=144, iterations=50, pheromone_evaporation=0.9, alpha=1.2, beta=5.2, epsilon=0.04)
@@ -44,6 +44,8 @@ ants, iterations, alpha, beta, evaporation, epsilon, result
 
     d1291
     Iteration 24/50, Best Path Length: 58079.21064535208
+    Iteration 8/100, Best Path Length: 56905.38700092363
+
     Stopped after 24 iterations due to time limit
     Initial Path Length: 60356.45939359181
 
